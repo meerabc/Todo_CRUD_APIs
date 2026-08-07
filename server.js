@@ -8,11 +8,13 @@ const port = 3000
 app.use(express.json())
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
 
-let tasks = [
+const initialTasks = [
     {id: 1, title: 'Complete Express assignment', done: true},
     {id: 2, title: 'Review JavaScript arrays', done: false},
     {id: 3, title: 'Push code to GitHub', done: true},
 ]
+
+let tasks = [...initialTasks]
 
 app.get('/', (req, res)=>{
     res.json({name: "Task API", version: "1.0", endpoints: ["/tasks"]})
@@ -23,7 +25,20 @@ app.get('/health', (req, res)=>{
 })
 
 app.get('/tasks', (req, res)=>{
-    res.status(200).json(tasks)
+
+    let {search, done} = req.query
+    let result = tasks
+
+    if(done !== undefined){
+        const isDone = done === 'true' 
+        result = result.filter(task => task.done === isDone)
+    }
+
+    if(search !== undefined){
+        search = search.toLowerCase().trim()
+        result = result.filter(task => task.title.toLowerCase().includes(search))
+    }
+    res.status(200).json(result)
 })
 
 app.get('/tasks/:id', (req, res)=>{
@@ -35,6 +50,14 @@ app.get('/tasks/:id', (req, res)=>{
     }
 
     return res.status(200).json(task)
+})
+
+app.get('/stats', (req, res)=>{
+    const total = tasks.length
+    const done = tasks.filter(task => task.done === true).length
+    const open = total - done
+
+    res.status(200).json({total, done, open})
 })
 
 app.post('/tasks', (req, res)=>{
@@ -56,6 +79,11 @@ app.post('/tasks', (req, res)=>{
 
     res.status(201).json(task)
 
+})
+
+app.post('/reset', (req, res)=>{
+    tasks = [...initialTasks]
+    res.status(200).json({tasks})
 })
 
 app.put('/tasks/:id', (req, res)=>{

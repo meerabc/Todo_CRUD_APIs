@@ -4,10 +4,26 @@
   "paths": {
     "/tasks": {
       "get": {
-        "summary": "List all tasks",
+        "summary": "List all tasks, optionally filtered by done status or search",
+        "parameters": [
+          {
+            "name": "done",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean" },
+            "description": "Filter by completion status (true or false)"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Return only tasks whose title contains this text"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Array of all tasks",
+            "description": "Array of matching tasks",
             "content": {
               "application/json": {
                 "example": [
