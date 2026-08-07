@@ -54,6 +54,47 @@ app.post('/tasks', (req, res)=>{
 
 })
 
+app.put('/tasks/:id', (req, res)=>{
+    const id = Number(req.params.id)
+    let {title, done} = req.body
+
+    const task = tasks.find(task => task.id === id)
+
+    if(!task){
+        return res.status(404).json({error: `Task ${id} does not exist`})
+    }
+
+
+    if(title === undefined && done === undefined){
+        return res.status(400).json({error: 'invalid body'})
+    }
+
+    if(title !== undefined){
+        title = title.trim()
+        if(title.length === 0){
+            return res.status(400).json({error: 'title cannot be empty'})
+        }
+        task.title = title
+    }
+    if(done !== undefined){
+        task.done = done
+    }
+
+    return res.status(200).json(task) 
+})
+
+app.delete('/tasks/:id', (req, res)=>{
+    const id = Number(req.params.id)
+    const index = tasks.findIndex(task => task.id === id)
+
+    if(index === -1){
+        return res.status(404).json({error: `Task ${id} does not exist`})
+    }
+    tasks.splice(index, 1)
+
+    return res.status(204).send()
+})
+
 app.listen(port, ()=>{
     console.log(`Server running on port ${port}`)
 })
