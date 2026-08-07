@@ -27,10 +27,31 @@ app.get('/tasks/:id', (req, res)=>{
     const task = tasks.find(task => task.id === id)
 
     if(!task){
-        return res.status(404).json({ "error": `Task ${id} not found` })
+        return res.status(404).json({error: `Task ${id} not found` })
     }
 
     return res.status(200).json(task)
+})
+
+app.post('/tasks', (req, res)=>{
+    let {title} = req.body
+
+    if(title === undefined){
+        return res.status(400).json({error: 'title is mandatory'})
+    }
+
+    title = title.trim()
+
+    if (title.length === 0){
+        return res.status(400).json({error: 'title cannot be empty'})
+    }
+
+    const id = tasks.length > 0 ? Math.max(...tasks.map(task => task.id)) + 1 : 1
+    const task = {id, title, done: false}   
+    tasks.push(task)
+
+    res.status(201).json(task)
+
 })
 
 app.listen(port, ()=>{
