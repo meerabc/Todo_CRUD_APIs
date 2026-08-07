@@ -1,0 +1,156 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "Task API", "version": "1.0.0" },
+  "paths": {
+    "/tasks": {
+      "get": {
+        "summary": "List all tasks",
+        "responses": {
+          "200": {
+            "description": "Array of all tasks",
+            "content": {
+              "application/json": {
+                "example": [
+                  { "id": 1, "title": "Complete Express assignment", "done": true },
+                  { "id": 2, "title": "Review JavaScript arrays", "done": false }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new task",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": { "title": "Buy milk" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Task created",
+            "content": {
+              "application/json": {
+                "example": { "id": 4, "title": "Buy milk", "done": false }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or empty title",
+            "content": {
+              "application/json": {
+                "example": { "error": "title is mandatory" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}": {
+      "get": {
+        "summary": "Get a single task",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The matching task",
+            "content": {
+              "application/json": {
+                "example": { "id": 1, "title": "Complete Express assignment", "done": true }
+              }
+            }
+          },
+          "404": {
+            "description": "No task with that id",
+            "content": {
+              "application/json": {
+                "example": { "error": "Task 99 not found" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a task's title and/or done status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": { "title": "Buy oat milk", "done": true }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated task",
+            "content": {
+              "application/json": {
+                "example": { "id": 1, "title": "Buy oat milk", "done": true }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty title or empty body",
+            "content": {
+              "application/json": {
+                "example": { "error": "invalid body" }
+              }
+            }
+          },
+          "404": {
+            "description": "No task with that id",
+            "content": {
+              "application/json": {
+                "example": { "error": "Task 99 does not exist" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a task",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Task deleted, no content returned"
+          },
+          "404": {
+            "description": "No task with that id",
+            "content": {
+              "application/json": {
+                "example": { "error": "Task 99 does not exist" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
