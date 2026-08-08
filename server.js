@@ -21,12 +21,15 @@ db.exec(`
 
 const taskCount = db.prepare(`SELECT COUNT(*) AS count FROM tasks`).get()
 
-if (taskCount.count === 0) {
+function seedTasks(){
     const insertTask = db.prepare('INSERT INTO tasks (id, title, done) VALUES (?, ?, ?)')
-
     insertTask.run(1, 'Complete Express assignment', 1)
     insertTask.run(2, 'Review JavaScript arrays', 0)
     insertTask.run(3, 'Push code to GitHub', 1)
+}
+
+if (taskCount.count === 0) {
+    seedTasks()
 }
 
 function rowToTask(row){
@@ -36,14 +39,6 @@ function rowToTask(row){
         done: Boolean(row.done)
     }
 }
-
-const initialTasks = [
-    {id: 1, title: 'Complete Express assignment', done: true},
-    {id: 2, title: 'Review JavaScript arrays', done: false},
-    {id: 3, title: 'Push code to GitHub', done: true},
-]
-
-let tasks = [...initialTasks]
 
 app.get('/', (req, res)=>{
     res.json({name: "Task API", version: "1.0", endpoints: ["/tasks"]})
@@ -70,8 +65,8 @@ app.get('/tasks/:id', (req, res)=>{
 })
 
 app.get('/stats', (req, res)=>{
-    const total = tasks.length
-    const done = tasks.filter(task => task.done === true).length
+    const total = db.prepare('SELECT COUNT(*) AS count FROM tasks').get().count
+    const done = db.prepare('SELECT COUNT(*) AS count FROM tasks WHERE done = 1').get().count
     const open = total - done
 
     res.status(200).json({total, done, open})
@@ -101,8 +96,11 @@ app.post('/tasks', (req, res)=>{
 })
 
 app.post('/reset', (req, res)=>{
-    tasks = [...initialTasks]
-    res.status(200).json({tasks})
+    db.prepare('DELETE FROM tasks').run()
+    seedTasks()
+
+    const rows = db.prepare('SELECT id, title, done FROM tasks').all()
+    res.status(200).json({ message: 'Tasks reset', tasks: rows.map(rowToTask) })
 })
 
 app.put('/tasks/:id', (req, res)=>{
