@@ -29,6 +29,14 @@ if (taskCount.count === 0) {
     insertTask.run(3, 'Push code to GitHub', 1)
 }
 
+function rowToTask(row){
+    return {
+        id: row.id,
+        title: row.title,
+        done: Boolean(row.done)
+    }
+}
+
 const initialTasks = [
     {id: 1, title: 'Complete Express assignment', done: true},
     {id: 2, title: 'Review JavaScript arrays', done: false},
@@ -46,31 +54,19 @@ app.get('/health', (req, res)=>{
 })
 
 app.get('/tasks', (req, res)=>{
-
-    let {search, done} = req.query
-    let result = tasks
-
-    if(done !== undefined){
-        const isDone = done === 'true' 
-        result = result.filter(task => task.done === isDone)
-    }
-
-    if(search !== undefined){
-        search = search.toLowerCase().trim()
-        result = result.filter(task => task.title.toLowerCase().includes(search))
-    }
-    res.status(200).json(result)
+    const rows = db.prepare('SELECT id, title, done FROM tasks').all()
+    res.status(200).json(rows.map(rowToTask))
 })
 
 app.get('/tasks/:id', (req, res)=>{
     const id = Number(req.params.id)
-    const task = tasks.find(task => task.id === id)
+    const row = db.prepare('SELECT id, title, done FROM tasks WHERE id = ?').get(id)
 
-    if(!task){
+    if(!row){
         return res.status(404).json({error: `Task ${id} not found` })
     }
 
-    return res.status(200).json(task)
+    return res.status(200).json(rowToTask(row))
 })
 
 app.get('/stats', (req, res)=>{
