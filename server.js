@@ -90,12 +90,10 @@ app.post('/tasks', (req, res)=>{
         return res.status(400).json({error: 'title cannot be empty'})
     }
 
-    const id = tasks.length > 0 ? Math.max(...tasks.map(task => task.id)) + 1 : 1
-    const task = {id, title, done: false}   
-    tasks.push(task)
+    const result = db.prepare('INSERT INTO tasks (title, done) VALUES (?, 0)').run(title)
+    const row = db.prepare('SELECT id, title, done FROM tasks WHERE id = ?').get(result.lastInsertRowid)
 
-    res.status(201).json(task)
-
+    res.status(201).json(rowToTask(row))
 })
 
 app.post('/reset', (req, res)=>{
