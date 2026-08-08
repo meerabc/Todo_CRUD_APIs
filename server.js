@@ -1,4 +1,5 @@
 const express = require('express')
+const Database = require('better-sqlite3')
 const swaggerUi = require('swagger-ui-express')
 const openapiDocument = require('./openapi.json')
 
@@ -7,6 +8,26 @@ const port = 3000
 
 app.use(express.json())
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
+
+const db = new Database('tasks.db')
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS tasks(
+       id INTEGER PRIMARY KEY,
+       title TEXT NOT NULL,
+       done INTEGER NOT NULL DEFAULT 0
+    ) `
+)
+
+const taskCount = db.prepare(`SELECT COUNT(*) AS count FROM tasks`).get()
+
+if (taskCount.count === 0) {
+    const insertTask = db.prepare('INSERT INTO tasks (id, title, done) VALUES (?, ?, ?)')
+
+    insertTask.run(1, 'Complete Express assignment', 1)
+    insertTask.run(2, 'Review JavaScript arrays', 0)
+    insertTask.run(3, 'Push code to GitHub', 1)
+}
 
 const initialTasks = [
     {id: 1, title: 'Complete Express assignment', done: true},
