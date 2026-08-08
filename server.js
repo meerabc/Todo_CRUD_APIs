@@ -49,7 +49,26 @@ app.get('/health', (req, res)=>{
 })
 
 app.get('/tasks', (req, res)=>{
-    const rows = db.prepare('SELECT id, title, done FROM tasks').all()
+    const { done, search } = req.query
+
+    let sql = 'SELECT id, title, done FROM tasks WHERE 1=1'
+    const params = []
+
+    if (done !== undefined){
+        const isDone = done === 'true' ? 1 : 0
+        sql += ' AND done = ?'
+        params.push(isDone)
+    }
+
+    if (search !== undefined){
+        const cleanSearch = search.trim().toLowerCase()
+        sql += ' AND LOWER(title) LIKE ?'
+        params.push(`%${cleanSearch}%`)
+    }
+
+    sql += ' ORDER BY title COLLATE NOCASE'
+
+    const rows = db.prepare(sql).all(...params)
     res.status(200).json(rows.map(rowToTask))
 })
 

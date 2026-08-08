@@ -35,12 +35,31 @@ The database is stored in a file called `tasks.db` in the root of the project. T
 | PUT    | /tasks/:id   | Update a task's title and/or done     |
 | DELETE | /tasks/:id   | Delete a task                         |
 
-## Extras (optional)
+## Extras (optional, beyond the required endpoints)
 
 | Method | Path                  | Description                                  |
 |--------|-----------------------|-----------------------------------------------|
+| GET    | /tasks?done=true       | Only tasks that are marked done               |
+| GET    | /tasks?done=false      | Only tasks that are not done                  |
+| GET    | /tasks?search=milk     | Only tasks whose title contains "milk"        |
 | GET    | /stats                | Task counts: total, done, open                |
 | POST   | /reset                | Restore the original 3 example tasks          |
+
+## Swagger UI
+
+Once the server is running, open `http://localhost:3000/docs` in your browser to see and test all the `/tasks` endpoints interactively.
+
+![Swagger UI](screenshots/swagger-ui.png)
+
+## Example request
+
+Creating a new task with curl:
+
+```
+curl -i -X POST http://localhost:3000/tasks -H "Content-Type: application/json" -d "{\"title\":\"Buy milk\"}"
+```
+
+![POST /tasks curl output](screenshots/post-tasks-curl.png)
 
 ## Database viewer
 

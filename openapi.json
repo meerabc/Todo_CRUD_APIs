@@ -1,10 +1,42 @@
 {
   "openapi": "3.0.0",
-  "info": { "title": "Task API", "version": "1.0.0" },
+  "info": { "title": "Task API", "version": "2.0.0" },
   "paths": {
+    "/": {
+      "get": {
+        "summary": "API info",
+        "responses": {
+          "200": {
+            "description": "Basic info about this API",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "Task API",
+                  "version": "1.0",
+                  "endpoints": ["/tasks", "/stats", "/reset"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Server is running",
+            "content": {
+              "application/json": { "example": { "status": "ok" } }
+            }
+          }
+        }
+      }
+    },
     "/tasks": {
       "get": {
-        "summary": "List all tasks, optionally filtered by done status or search",
+        "summary": "List tasks, with optional filtering, search, and sorted alphabetically by title",
         "parameters": [
           {
             "name": "done",
@@ -18,12 +50,12 @@
             "in": "query",
             "required": false,
             "schema": { "type": "string" },
-            "description": "Return only tasks whose title contains this text"
+            "description": "Return only tasks whose title contains this text (case-insensitive)"
           }
         ],
         "responses": {
           "200": {
-            "description": "Array of matching tasks",
+            "description": "Array of matching tasks, sorted alphabetically by title",
             "content": {
               "application/json": {
                 "example": [
@@ -55,7 +87,7 @@
             }
           },
           "400": {
-            "description": "Missing or empty title",
+            "description": "Missing, empty, or non-string title",
             "content": {
               "application/json": {
                 "example": { "error": "title is mandatory" }
@@ -125,7 +157,7 @@
             }
           },
           "400": {
-            "description": "Empty title or empty body",
+            "description": "Empty body, non-string title, empty title, or non-boolean done",
             "content": {
               "application/json": {
                 "example": { "error": "invalid body" }
@@ -162,6 +194,43 @@
             "content": {
               "application/json": {
                 "example": { "error": "Task 99 does not exist" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats": {
+      "get": {
+        "summary": "Task counts computed with SQL COUNT()",
+        "responses": {
+          "200": {
+            "description": "Total, done, and open task counts",
+            "content": {
+              "application/json": {
+                "example": { "total": 3, "done": 2, "open": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reset": {
+      "post": {
+        "summary": "Delete all tasks and restore the 3 original example tasks",
+        "responses": {
+          "200": {
+            "description": "Tasks reset",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Tasks reset",
+                  "tasks": [
+                    { "id": 1, "title": "Complete Express assignment", "done": true },
+                    { "id": 2, "title": "Review JavaScript arrays", "done": false },
+                    { "id": 3, "title": "Push code to GitHub", "done": true }
+                  ]
+                }
               }
             }
           }
