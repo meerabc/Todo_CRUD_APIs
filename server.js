@@ -84,6 +84,10 @@ app.post('/tasks', (req, res)=>{
         return res.status(400).json({error: 'title is mandatory'})
     }
 
+    if(typeof title !== 'string'){
+        return res.status(400).json({error: 'title must be a string'})
+    }
+
     title = title.trim()
 
     if (title.length === 0){
@@ -105,39 +109,50 @@ app.put('/tasks/:id', (req, res)=>{
     const id = Number(req.params.id)
     let {title, done} = req.body
 
-    const task = tasks.find(task => task.id === id)
+    const row = db.prepare('SELECT id, title, done FROM tasks WHERE id = ?').get(id)
 
-    if(!task){
+    if(!row){
         return res.status(404).json({error: `Task ${id} does not exist`})
     }
-
 
     if(title === undefined && done === undefined){
         return res.status(400).json({error: 'invalid body'})
     }
 
+    let nextTitle = row.title
+    let nextDone = row.done
+
     if(title !== undefined){
+        if(typeof title !== 'string'){
+            return res.status(400).json({error: 'title must be a string'})
+        }
         title = title.trim()
         if(title.length === 0){
             return res.status(400).json({error: 'title cannot be empty'})
         }
-        task.title = title
-    }
-    if(done !== undefined){
-        task.done = done
+        nextTitle = title
     }
 
-    return res.status(200).json(task) 
+    if(done !== undefined){
+        if(typeof done !== 'boolean'){
+            return res.status(400).json({error: 'done must be a boolean'})
+        }
+        nextDone = done ? 1 : 0
+    }
+
+    db.prepare('UPDATE tasks SET title = ?, done = ? WHERE id = ?').run(nextTitle, nextDone, id)
+
+    const updatedRow = db.prepare('SELECT id, title, done FROM tasks WHERE id = ?').get(id)
+    return res.status(200).json(rowToTask(updatedRow))
 })
 
 app.delete('/tasks/:id', (req, res)=>{
     const id = Number(req.params.id)
-    const index = tasks.findIndex(task => task.id === id)
+    const result = db.prepare('DELETE FROM tasks WHERE id = ?').run(id)
 
-    if(index === -1){
+    if(result.changes === 0){
         return res.status(404).json({error: `Task ${id} does not exist`})
     }
-    tasks.splice(index, 1)
 
     return res.status(204).send()
 })
