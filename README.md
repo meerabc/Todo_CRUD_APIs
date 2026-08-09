@@ -10,10 +10,20 @@ Requirements: Node.js (tested on v24.13.0)
 git clone https://github.com/meerabc/Todo_CRUD_APIs.git
 cd Todo_CRUD_APIs
 npm install
-node server.js
+node index.js
 ```
 
 The server will start on `http://localhost:3000`. The database file and table are created automatically on first run, and 3 example tasks are added if the table is empty.
+
+## Project structure
+
+The code is organized in layers:
+- `src/routes/` : handles HTTP requests and responses, no business logic
+- `src/services/` : validation and business rules
+- `src/repositories/` : the only place that talks to the database (SQL)
+- `src/middleware/error-handler.js` : turns thrown errors into HTTP status codes
+
+This separation means the database can be swapped out later without changing the routes or the validation rules, only the repository file would need to change.
 
 ## Why SQLite
 
