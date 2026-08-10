@@ -1,19 +1,41 @@
 # Task API
 
-A small backend API to manage a to-do list. You can create tasks, read them, update them, and delete them (CRUD). Data is stored in a SQLite database, so it survives server restarts.
+A small backend API to manage a to-do list. You can create tasks, read them, update them, and delete them (CRUD). Data is stored in a Postgres database running in Docker, so it survives both app restarts and container restarts.
 
-## How to install and run
+## How to run (one command)
 
-Requirements: Node.js (tested on v24.13.0)
+Requirements: Docker Desktop installed and running.
+
+1. Clone the repo:
+   ```
+   git clone https://github.com/meerabc/Todo_CRUD_APIs.git
+   cd Todo_CRUD_APIs
+   ```
+2. Copy the example environment file:
+   ```
+   cp .env.example .env
+   ```
+3. Start everything:
+   ```
+   docker compose up
+   ```
+
+This starts both the API and a Postgres database together. The API will be available at `http://localhost:3000`. The database table is created automatically, and 3 example tasks are seeded on the first run.
+
+To stop everything:
+```
+docker compose down
+```
+
+## Environment variables
+
+The app reads its database connection from `DATABASE_URL`, set in a `.env` file. `.env.example` shows which variable to set:
 
 ```
-git clone https://github.com/meerabc/Todo_CRUD_APIs.git
-cd Todo_CRUD_APIs
-npm install
-node index.js
+DATABASE_URL=postgres://postgres:dev@localhost:5432/tasks
 ```
 
-The server will start on `http://localhost:3000`. The database file and table are created automatically on first run, and 3 example tasks are added if the table is empty.
+`.env` is gitignored and never committed, since it can contain real secrets. Note that inside `docker compose`, the app actually connects using the service name `db` instead of `localhost`, this is set automatically in `compose.yaml`. The `.env` file matters if you ever want to run the app directly on your machine (outside Docker) against a locally running Postgres.
 
 ## Project structure
 
@@ -23,15 +45,7 @@ The code is organized in layers:
 - `src/repositories/` : the only place that talks to the database (SQL)
 - `src/middleware/error-handler.js` : turns thrown errors into HTTP status codes
 
-This separation means the database can be swapped out later without changing the routes or the validation rules, only the repository file would need to change.
-
-## Why SQLite
-
-I used SQLite because it doesn't need a separate database server, it just runs as a single file (`tasks.db`) inside the project folder. This is a good fit for a small project like this API. Since it's file based, my task data now survives a server restart, unlike Assignment 1 where everything was stored in a JavaScript array in memory and disappeared every time the server restarted.
-
-## Database file
-
-The database is stored in a file called `tasks.db` in the root of the project. This file is created automatically the first time the server runs. It is not committed to GitHub (it's listed in `.gitignore`), since it gets generated on its own and shouldn't be tracked like source code.
+This is the third storage engine this API has used (in-memory, then SQLite, now Postgres), and each time only the repository file changed. Routes and services stayed the same, which is the whole point of keeping storage in its own layer.
 
 ## Endpoints
 
@@ -57,7 +71,7 @@ The database is stored in a file called `tasks.db` in the root of the project. T
 
 ## Swagger UI
 
-Once the server is running, open `http://localhost:3000/docs` in your browser to see and test all the `/tasks` endpoints interactively.
+Once the stack is running, open `http://localhost:3000/docs` in your browser to see and test all the `/tasks` endpoints interactively.
 
 ![Swagger UI](screenshots/swagger-ui.png)
 
@@ -71,20 +85,25 @@ curl -i -X POST http://localhost:3000/tasks -H "Content-Type: application/json" 
 
 ![POST /tasks curl output](screenshots/post-tasks-curl.png)
 
-## Database viewer
+## Database
 
-I used DB Browser for SQLite to look at `tasks.db` directly.
+Data is stored in Postgres, running as its own container, not a file on disk. A named Docker volume (`taskdata`) keeps the actual data outside the container, so it survives even if the container is removed and recreated.
 
-![DB Browser view of tasks table](screenshots/db-browser.png)
+Here is the `tasks` table, viewed directly with `psql` inside the running container:
 
-## Example SQL query
-
-One query I ran directly in DB Browser:
-
-```sql
-SELECT * FROM tasks WHERE done = 1;
+```
+docker compose exec db psql -U postgres -d tasks -c "SELECT * FROM tasks"
 ```
 
-![Query execution result](screenshots/query-execution.png)
+![Postgres data](screenshots/postgres-data.png)
 
-This returns only the tasks that are marked as done. After running this and other queries (like `UPDATE` and `DELETE`) directly on the database, I called `GET /tasks` through my API and saw the exact same changes reflected. This showed me that my API is just reading and writing to this same file, it has no separate copy of the data anywhere.
+## Persistence proof
+
+To prove data survives a full restart, not just an app restart, I did this:
+
+1. Created a new task through the API.
+2. Ran `docker compose down` (this removes the containers completely, not just stops them).
+3. Ran `docker compose up` again.
+4. Called `GET /tasks` again.
+
+The task I created was still there. This works because the data lives in the `taskdata` volume, which is separate from the containers themselves. Removing and recreating the containers does not touch the volume, so nothing is lost.
