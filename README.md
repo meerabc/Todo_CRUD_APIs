@@ -97,6 +97,8 @@ docker compose exec db psql -U postgres -d tasks -c "SELECT * FROM tasks"
 
 ![Postgres data](screenshots/postgres-data.png)
 
+The `db` service has a Docker healthcheck (`pg_isready`), and `api` waits for it to report healthy before starting. Without this, the app can start before Postgres is ready to accept connections and crash with a connection error, especially on a completely fresh volume.
+
 ## Persistence proof
 
 To prove data survives a full restart, not just an app restart, I did this:
