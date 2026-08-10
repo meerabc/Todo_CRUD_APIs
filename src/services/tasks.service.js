@@ -1,7 +1,7 @@
-const repo = require('../repositories/tasks.repository')
+const repo = require('../repositories/tasks.repository.postgres')
 const { NotFoundError, ValidationError } = require('../errors')
 
-function listTasks({ done, search } = {}){
+async function listTasks({ done, search } = {}){
     let doneFilter
     if (done !== undefined){
         if (done !== 'true' && done !== 'false'){
@@ -19,18 +19,18 @@ function listTasks({ done, search } = {}){
         searchFilter = word
     }
 
-    return repo.findAll({ done: doneFilter, search: searchFilter })
+    return await repo.findAll({ done: doneFilter, search: searchFilter })
 }
 
-function getTask(id){
-    const task = repo.findById(id)
+async function getTask(id){
+    const task = await repo.findById(id)
     if (!task){
         throw new NotFoundError(`Task ${id} not found`)
     }
     return task
 }
 
-function createTask(body = {}){
+async function createTask(body = {}){
     const { title } = body
 
     if (title === undefined){
@@ -44,10 +44,10 @@ function createTask(body = {}){
         throw new ValidationError('title cannot be empty')
     }
 
-    return repo.create({ title: trimmedTitle })
+    return await repo.create({ title: trimmedTitle })
 }
 
-function updateTask(id, body = {}){
+async function updateTask(id, body = {}){
     const hasTitle = Object.prototype.hasOwnProperty.call(body, 'title')
     const hasDone = Object.prototype.hasOwnProperty.call(body, 'done')
 
@@ -75,26 +75,26 @@ function updateTask(id, body = {}){
         changes.done = body.done
     }
 
-    const updated = repo.update(id, changes)
+    const updated = await repo.update(id, changes)
     if (!updated){
         throw new NotFoundError(`Task ${id} does not exist`)
     }
     return updated
 }
 
-function deleteTask(id){
-    const removed = repo.remove(id)
+async function deleteTask(id){
+    const removed = await repo.remove(id)
     if (!removed){
         throw new NotFoundError(`Task ${id} does not exist`)
     }
 }
 
-function getStats(){
-    return repo.getStats()
+async function getStats(){
+    return await repo.getStats()
 }
 
-function resetTasks(){
-    return repo.reset()
+async function resetTasks(){
+    return await repo.reset()
 }
 
 module.exports = {
