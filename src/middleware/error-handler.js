@@ -1,4 +1,4 @@
-const { NotFoundError, ValidationError } = require('../errors')
+const { NotFoundError, ValidationError, AuthError } = require('../errors')
 
 function errorHandler(err, req, res, next){
     if (err instanceof ValidationError){
@@ -6,6 +6,9 @@ function errorHandler(err, req, res, next){
     }
     if (err instanceof NotFoundError){
         return res.status(404).json({ error: err.message })
+    }
+    if (err instanceof AuthError){
+        return res.status(401).json({ error: err.message })
     }
 
     console.error(err)

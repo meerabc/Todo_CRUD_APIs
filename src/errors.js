@@ -13,4 +13,11 @@ class ValidationError extends Error {
     }
 }
 
-module.exports = { NotFoundError, ValidationError }
+class AuthError extends Error {
+    constructor(message){
+        super(message)
+        this.name = 'AuthError'
+    }
+}
+
+module.exports = { NotFoundError, ValidationError, AuthError }
