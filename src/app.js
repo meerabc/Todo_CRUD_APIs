@@ -3,6 +3,7 @@ const swaggerUi = require('swagger-ui-express')
 const openapiDocument = require('../openapi.json')
 const metaRoutes = require('./routes/meta.routes')
 const tasksRoutes = require('./routes/tasks.routes')
+const authRoutes = require('./routes/auth.routes')
 const { errorHandler } = require('./middleware/error-handler')
 
 function createApp(){
@@ -13,6 +14,7 @@ function createApp(){
 
     app.use('/', metaRoutes)
     app.use('/', tasksRoutes)
+    app.use('/', authRoutes)
 
     app.use(errorHandler)
 
