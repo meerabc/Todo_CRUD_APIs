@@ -9,4 +9,8 @@ router.get('/health', (req, res)=>{
     res.json({ status: "ok" })
 })
 
+router.get('/public/info', (req, res) => {
+    res.status(200).json({ message: "Welcome stranger! This info is public." })
+})
+
 module.exports = router
