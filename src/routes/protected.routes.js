@@ -1,35 +1,20 @@
 const express = require('express')
-const supabase = require('../supabase')
+const { requireAuth } = require('../middleware/auth.guard')
 const router = express.Router()
 
-router.get('/protected/profile', async (req, res, next) => {
-    try {
-        const authHeader = req.headers.authorization
-        
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ error: 'Access token required' })
-        }
+router.get('/protected/profile', requireAuth, (req, res) => {
+    res.status(200).json({
+        id: req.user.id,
+        email: req.user.email,
+        created_at: req.user.created_at
+    })
+})
 
-        const token = authHeader.split(' ')[1]
-        
-        if (!token) {
-            return res.status(401).json({ error: 'Access token required' })
-        }
-
-        const { data, error } = await supabase.auth.getUser(token)
-
-        if (error || !data.user) {
-            return res.status(401).json({ error: 'Invalid or expired token' })
-        }
-
-        res.status(200).json({
-            id: data.user.id,
-            email: data.user.email,
-            created_at: data.user.created_at
-        })
-    } catch (err) {
-        next(err)
-    }
+router.get('/protected/dashboard', requireAuth, (req, res) => {
+    res.status(200).json({
+        message: 'Dashboard access granted',
+        user_email: req.user.email
+    })
 })
 
 module.exports = router

@@ -1,28 +1,28 @@
 const supabase = require('../supabase')
 const { ValidationError, AuthError } = require('../errors')
 
-async function signUp({ email, password }){
-    if (email === undefined || password === undefined){
+async function signUp({ email, password }) {
+    if (email === undefined || password === undefined) {
         throw new ValidationError('email and password are required')
     }
 
     const { data, error } = await supabase.auth.signUp({ email, password })
 
-    if (error){
+    if (error) {
         throw new ValidationError(error.message)
     }
 
     return data.user
 }
 
-async function login({ email, password }){
-    if (email === undefined || password === undefined){
+async function login({ email, password }) {
+    if (email === undefined || password === undefined) {
         throw new ValidationError('email and password are required')
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (error){
+    if (error) {
         throw new AuthError('Invalid login credentials')
     }
 
@@ -32,4 +32,11 @@ async function login({ email, password }){
     }
 }
 
-module.exports = { signUp, login }
+async function logout() {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+        throw error
+    }
+}
+
+module.exports = { signUp, login, logout }
