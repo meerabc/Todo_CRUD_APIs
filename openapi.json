@@ -13,7 +13,7 @@
                 "example": {
                   "name": "Task API",
                   "version": "1.0",
-                  "endpoints": ["/tasks", "/stats", "/reset"]
+                  "endpoints": ["/tasks", "/stats", "/reset", "/health", "/auth", "/public", "/protected"]
                 }
               }
             }
@@ -235,6 +235,130 @@
             }
           }
         }
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "summary": "Create a new user account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "intern@flyrank.com",
+                "password": "password123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully created"
+          },
+          "400": {
+            "description": "Bad request (missing email/password)"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate a user and return a JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "intern@flyrank.com",
+                "password": "password123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully authenticated, returns access and refresh tokens"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Invalid login credentials"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "End the user's session",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully logged out"
+          },
+          "401": {
+            "description": "Access token required or invalid"
+          }
+        }
+      }
+    },
+    "/public/info": {
+      "get": {
+        "summary": "Read public, open data",
+        "responses": {
+          "200": {
+            "description": "Returns a welcome message"
+          }
+        }
+      }
+    },
+    "/protected/profile": {
+      "get": {
+        "summary": "Read private profile data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns user metadata"
+          },
+          "401": {
+            "description": "Access token required or invalid"
+          }
+        }
+      }
+    },
+    "/protected/dashboard": {
+      "get": {
+        "summary": "Read private dashboard data",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns dashboard message and email"
+          },
+          "401": {
+            "description": "Access token required or invalid"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   }
